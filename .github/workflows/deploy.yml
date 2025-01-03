@@ -12,7 +12,7 @@ on:
 
 env:
   DOTNET_VERSION: "8"
-  AZURE_APP_SERVICE_OUTPUT_DIR: "GithubActionsEnvironment"
+  DOTNET_OUTPUT_DIR: "GithubActionsEnvironment"
 
 jobs:
   build-and-deploy:
@@ -31,11 +31,11 @@ jobs:
         run: |
           dotnet restore
           dotnet build -c "Release"
-          dotnet publish -c "Release" -o "${{ env.AZURE_APP_SERVICE_OUTPUT_DIR }}"
+          dotnet publish -c "Release" -o "${{ env.DOTNET_OUTPUT_DIR }}"
 
       - name: "Deploy to Azure App Service"
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
           publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
-          package: "${{ env.AZURE_APP_SERVICE_OUTPUT_DIR }}"
+          package: "${{ env.DOTNET_OUTPUT_DIR }}"
