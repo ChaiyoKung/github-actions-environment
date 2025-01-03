@@ -1,0 +1,41 @@
+name: "Deploy"
+run-name: "Deploy to ${{ inputs.environment }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: environment
+        description: "Environment to deploy to"
+        required: true
+        default: "dev"
+
+env:
+  DOTNET_VERSION: "8"
+  AZURE_APP_SERVICE_OUTPUT_DIR: "GithubActionsEnvironment"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Setup .NET Core"
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: "Build and Publish"
+        run: |
+          dotnet restore
+          dotnet build -c "Release"
+          dotnet publish -c "Release" -o "${{ env.AZURE_APP_SERVICE_OUTPUT_DIR }}"
+
+      - name: "Deploy to Azure App Service"
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
+          publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE  }}
+          package: "${{ env.AZURE_APP_SERVICE_OUTPUT_DIR }}"
